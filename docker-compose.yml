@@ -1,0 +1,28 @@
+# docker-compose.yml (in the root folder)
+# This docker-compose file sets up a PostgreSQL database for the Django backend.
+
+#command to run: docker-compose up -d
+#command to stop: docker-compose down
+#command to view logs: docker-compose logs -f
+#command docker-compose down -d -v : to stop and remove volumes
+
+
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: lyricverse_postgres
+    restart: always
+    
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
