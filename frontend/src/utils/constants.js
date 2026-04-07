@@ -12,7 +12,7 @@ export const API_ENDPOINTS = {
 
 export const ROLES = {
     USER: 'user',
-    VERIFIER: 'verifier',
+    VERIFIER: 'label',
 };
 
 export const LANGUAGES = [

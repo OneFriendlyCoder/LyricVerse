@@ -4,8 +4,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.hashers import check_password, make_password
-from .models import User, Song
-from .serializers import UserSerializer, SongSerializer
+from .models import User, Song, Genre, Languages
+from .serializers import UserSerializer, SongSerializer, GenreSerializer, LanguagesSerializer
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -170,3 +170,18 @@ class SongViewSet(viewsets.ModelViewSet):
         song.status = 'PUBLISHED'
         song.save()
         return Response({"message": f"'{song.title}' has been published!"})
+    
+
+
+class GenreViewSet(viewsets.ModelViewSet):
+        queryset = Genre.objects.all()
+        serializer_class = GenreSerializer
+        http_method_names = ['get']
+
+class LanguagesViewSet(viewsets.ModelViewSet):
+        queryset = Languages.objects.all()
+        serializer_class = LanguagesSerializer
+        http_method_names = ['get']
+
+
+

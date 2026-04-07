@@ -8,6 +8,7 @@ import Profile from "./pages/Profile.jsx";
 import Explore from "./pages/Explore.jsx";
 import LyricWiki from "./pages/LyricWiki.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
+import Annotations from "./pages/Annotations.jsx";
 import { ToastProvider } from './components/Toast.jsx';
 
 
@@ -37,6 +38,9 @@ function App() {
 
         {/* The LyricWiki page will load at the /lyricwiki URL */}
         <Route path="/lyricwiki" element={<LyricWiki />} />
+
+        {/* The annotation page will load at the /annotations URL */}
+        <Route path="/annotations" element={<Annotations />} />  
 
 
         {/* Admin Dashboard */}

@@ -77,7 +77,7 @@ export default function Dashboard() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
           <div>
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">My Workspace</h1>
-            <p className="text-slate-500 mt-1">Manage your lyrics, translations, and wiki contributions.</p>
+            {/* <p className="text-slate-500 mt-1">Manage lyrics, translations, and wiki contributions.</p> */}
           </div>
           <button 
             onClick={() => navigate('/contribute')}

@@ -13,6 +13,7 @@ import {
     ChevronRight
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import { BASE_URL } from '../utils/constants';
 
 export default function Explore() {
     const navigate = useNavigate();
@@ -22,19 +23,55 @@ export default function Explore() {
     const [activeLanguage, setActiveLanguage] = useState('All');
     const [activeGenre, setActiveGenre] = useState('All');
 
+    // code 
+    const [languages, setLanguages] = useState([]);
+    const [genres, setGenres] = useState([]);
+    const [owners, setOwners] = useState(['All', 'User Contributed', 'Label Verified']); // static or API later
+    const [allSongs, setAllSongs] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    // useEffect(() => {
+    //     const fetchData = async () => {
+    //         try {
+    //             const [langRes, genreRes, songRes] = await Promise.all([
+    //                 fetch(`${BASE_URL}/languages/`),
+    //                 fetch(`${BASE_URL}/genre/`),
+    //                 // fetch(`${BASE_URL}/songs/`)
+    //             ]);
+
+    //             const languagesData = await langRes.json();
+    //             const genresData = await genreRes.json();
+    //             const songsData = await songRes.json();
+
+    //             // Add "All" manually
+    //             setLanguages(["All", ...languagesData]);
+    //             setGenres(["All", ...genresData]);
+    //             setAllSongs(songsData);
+
+    //         } catch (error) {
+    //             console.error("Error fetching data:", error);
+    //         } finally {
+    //             setLoading(false);
+    //         }
+    //     };
+
+    //     fetchData();
+    // }, []);
+
     // Filter Options
-    const languages = ['All', 'Hindi', 'Marathi', 'Tamil', 'Punjabi', 'Bengali'];
-    const genres = ['All', 'Pop', 'Folk', 'Indie', 'Acoustic', 'R&B'];
+    // const languages = ['All', 'Hindi', 'Marathi', 'Tamil', 'English', 'Bengali'];
+    // const genres = ['All', 'Pop', 'Folk', 'Indie', 'Acoustic', 'R&B'];
+    // const owners = ['All', 'User Contributed', 'Label Verified'];
 
     // Mock Data for the Community Songs
-    const allSongs = [
-        { id: 1, title: 'Midnight Rain', artist: 'Arjun Jay', genre: 'Pop', originalLang: 'English', translatedTo: ['Hindi', 'Marathi'], likes: 1205, annotations: 14, color: 'from-blue-500 to-indigo-500' },
-        { id: 2, title: 'Desert Rose', artist: 'Priya Sharma', genre: 'Folk', originalLang: 'English', translatedTo: ['Marathi', 'Punjabi'], likes: 840, annotations: 8, color: 'from-amber-400 to-orange-500' },
-        { id: 3, title: 'Neon Lights', artist: 'The Wanderers', genre: 'Indie', originalLang: 'English', translatedTo: ['Hindi', 'Tamil'], likes: 2300, annotations: 32, color: 'from-pink-500 to-rose-500' },
-        { id: 4, title: 'Acoustic Heart', artist: 'David Chen', genre: 'Acoustic', originalLang: 'English', translatedTo: ['Bengali'], likes: 450, annotations: 3, color: 'from-emerald-400 to-teal-500' },
-        { id: 5, title: 'City Whispers', artist: 'Maya & Co.', genre: 'R&B', originalLang: 'English', translatedTo: ['Hindi', 'Marathi'], likes: 1890, annotations: 21, color: 'from-violet-500 to-fuchsia-500' },
-        { id: 6, title: 'Ocean Waves', artist: 'Samir', genre: 'Pop', originalLang: 'English', translatedTo: ['Tamil'], likes: 670, annotations: 5, color: 'from-cyan-400 to-blue-500' },
-    ];
+    // const allSongs = [
+    //     { id: 1, title: 'Midnight Rain', artist: 'Arjun Jay', genre: 'Pop', originalLang: 'English', translatedTo: ['Hindi', 'Marathi'], likes: 1205, annotations: 14, color: 'from-blue-500 to-indigo-500' },
+    //     { id: 2, title: 'Desert Rose', artist: 'Priya Sharma', genre: 'Folk', originalLang: 'English', translatedTo: ['Marathi', 'Punjabi'], likes: 840, annotations: 8, color: 'from-amber-400 to-orange-500' },
+    //     { id: 3, title: 'Neon Lights', artist: 'The Wanderers', genre: 'Indie', originalLang: 'English', translatedTo: ['Hindi', 'Tamil'], likes: 2300, annotations: 32, color: 'from-pink-500 to-rose-500' },
+    //     { id: 4, title: 'Acoustic Heart', artist: 'David Chen', genre: 'Acoustic', originalLang: 'English', translatedTo: ['Bengali'], likes: 450, annotations: 3, color: 'from-emerald-400 to-teal-500' },
+    //     { id: 5, title: 'City Whispers', artist: 'Maya & Co.', genre: 'R&B', originalLang: 'English', translatedTo: ['Hindi', 'Marathi'], likes: 1890, annotations: 21, color: 'from-violet-500 to-fuchsia-500' },
+    //     { id: 6, title: 'Ocean Waves', artist: 'Samir', genre: 'Pop', originalLang: 'English', translatedTo: ['Tamil'], likes: 670, annotations: 5, color: 'from-cyan-400 to-blue-500' },
+    // ];
 
     // Filtering Logic
     const filteredSongs = allSongs.filter(song => {
@@ -103,8 +140,8 @@ export default function Explore() {
                                     key={lang}
                                     onClick={() => setActiveLanguage(lang)}
                                     className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-200 ${activeLanguage === lang
-                                            ? 'bg-slate-900 text-white shadow-md transform scale-105'
-                                            : 'bg-white border border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50'
+                                        ? 'bg-slate-900 text-white shadow-md transform scale-105'
+                                        : 'bg-white border border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50'
                                         }`}
                                 >
                                     {lang}
@@ -124,8 +161,8 @@ export default function Explore() {
                                     key={genre}
                                     onClick={() => setActiveGenre(genre)}
                                     className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-200 ${activeGenre === genre
-                                            ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 transform scale-105'
-                                            : 'bg-white border border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50'
+                                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 transform scale-105'
+                                        : 'bg-white border border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50'
                                         }`}
                                 >
                                     {genre}
@@ -133,6 +170,29 @@ export default function Explore() {
                             ))}
                         </div>
                     </div>
+
+                    {/* Owner Filter */}
+                    <div>
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <Music size={14} /> Owner
+                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                            {owners.map(owner => (
+                                <button
+                                    key={owner}
+                                    onClick={() => setActiveGenre(owner)}
+                                    className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-200 ${activeGenre === owner
+                                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 transform scale-105'
+                                        : 'bg-white border border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50'
+                                        }`}
+                                >
+                                    {owner}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+
 
                 </div>
 

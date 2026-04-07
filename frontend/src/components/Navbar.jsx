@@ -11,6 +11,7 @@ import {
     LayoutDashboard,
     PlusCircle,
     Bell,
+    Pen,
     SearchIcon
 } from 'lucide-react';
 
@@ -23,7 +24,8 @@ export default function Navbar() {
         { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
         { name: 'Explore', path: '/explore', icon: SearchIcon },
         { name: 'LyricWiki', path: '/lyricwiki', icon: BookOpen },
-        { name: 'Contribute', path: '/contribute', icon: PlusCircle },
+        { name: 'Create Song', path: '/contribute', icon: PlusCircle },
+        { name: 'Annotations', path: '/annotations', icon: Pen },
     ];
 
     return (
