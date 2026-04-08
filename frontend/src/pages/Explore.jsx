@@ -136,7 +136,7 @@ export default function Explore() {
 
     // Filtering Logic
     const filteredSongs = allSongs.filter(song => {
-        const matchesSearch = song.title.toLowerCase().includes(searchQuery.toLowerCase()) || song.artist.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch = song.artist.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesLang = activeLanguage === 'All' || song.originalLang === activeLanguage || song.translatedTo.includes(activeLanguage);
         const matchesGenre = activeGenre === 'All' || song.genre === activeGenre;
         const matchesOwner = activeOwner === 'All' || song.owner === activeOwner;
@@ -180,7 +180,7 @@ export default function Explore() {
                         {/* The Input Field */}
                         <input
                             type="text"
-                            placeholder="Search songs..."
+                            placeholder="Search by author name..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all"
