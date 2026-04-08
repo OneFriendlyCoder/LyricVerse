@@ -65,10 +65,10 @@ export default function Contribute() {
       {/* Main Editor Layout */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-8 flex-grow">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
+
           {/* Left Column: Editor & Metadata (Spans 8 cols on large screens) */}
           <div className="lg:col-span-8 flex flex-col gap-6">
-            
+
             {/* Metadata Card */}
             <div className="bg-white/80 backdrop-blur-md border border-slate-200/60 rounded-2xl p-6 shadow-sm">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -81,7 +81,7 @@ export default function Contribute() {
                     <input type="text" placeholder="e.g., Midnight Rain" className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold text-lg placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 focus:bg-white transition-all" />
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Artist / Band</label>
                   <div className="relative">
@@ -110,7 +110,7 @@ export default function Contribute() {
 
             {/* Main Lyric Editor */}
             <div className="bg-white/80 backdrop-blur-md border border-slate-200/60 rounded-2xl shadow-sm overflow-hidden flex flex-col flex-grow min-h-[500px]">
-              
+
               {/* Editor Toolbar */}
               <div className="border-b border-slate-200/60 bg-slate-50/50 p-3 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-1">
@@ -119,7 +119,7 @@ export default function Contribute() {
                     <span className="hidden sm:inline">Add Wiki Annotation</span>
                   </button>
                 </div>
-                
+
                 <button 
                   onClick={handleTranslate}
                   className="flex items-center gap-2 bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100 hover:border-indigo-200 px-4 py-1.5 rounded-lg text-sm font-bold transition-all"
@@ -150,7 +150,7 @@ export default function Contribute() {
           {/* Right Column: Assistant Tools (Translation & Wiki) */}
           <div className="lg:col-span-4 flex flex-col h-full">
             <div className="bg-white/80 backdrop-blur-md border border-slate-200/60 rounded-2xl shadow-sm overflow-hidden flex flex-col sticky top-28 min-h-[600px] h-full">
-              
+
               {/* Tabs */}
               <div className="flex border-b border-slate-200/60">
                 <button 
@@ -184,7 +184,7 @@ export default function Contribute() {
                       <option value="Tamil">Tamil (தமிழ்)</option>
                     </select>
                   </div>
-                  
+
                   <div className="flex-grow bg-slate-50 border border-slate-200/60 rounded-xl p-4 text-slate-600 text-base leading-relaxed overflow-y-auto">
                     {isTranslating ? (
                       <div className="flex flex-col items-center justify-center h-full text-slate-400 space-y-3">
@@ -227,3 +227,4 @@ export default function Contribute() {
     </div>
   );
 }
+

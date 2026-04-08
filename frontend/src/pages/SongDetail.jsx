@@ -6,6 +6,8 @@ import {
   Share2,
   Star,
   PlayCircle,
+  Volume2,
+  Square,
   Globe2,
   MessageSquare,
   Edit3,
@@ -42,6 +44,7 @@ export default function SongDetail() {
   const [songData, setSongData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState('');
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   useEffect(() => {
     const fetchSong = async () => {
@@ -138,6 +141,60 @@ export default function SongDetail() {
       console.error('Share failed:', error);
     }
   };
+
+  const handleReadAloud = async () => {
+    const textToRead =
+      activeLang === 'original'
+        ? lyricsData.map((line) => line.original).join('. ')
+        : lyricsData
+            .map((line) => line.translations[activeLang] || line.original)
+            .join('. ');
+
+    if (!textToRead.trim()) {
+      return;
+    }
+
+    if (isSpeaking) {
+      window.speechSynthesis?.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    // Placeholder for future backend TTS integration.
+    // Example:
+    // const response = await fetch(`${BASE_URL}/song/${id}/speech/`, {
+    //   method: 'POST',
+    //   credentials: 'include',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({
+    //     language: activeLang,
+    //     text: textToRead,
+    //   }),
+    // });
+    // const data = await response.json();
+    // Then play the returned audio URL/blob here.
+
+    if (!window.speechSynthesis) {
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(textToRead);
+    utterance.lang = activeLang === 'original' ? normalizedSong.original_language || 'en' : activeLang;
+    utterance.rate = 0.92;
+    utterance.pitch = 1;
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
+    window.speechSynthesis.cancel();
+    setIsSpeaking(true);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis?.cancel();
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -277,21 +334,34 @@ export default function SongDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-up" style={{ animationDelay: '0.1s' }}>
           <div className="lg:col-span-8">
             <div className="bg-white/80 backdrop-blur-md border border-slate-200/60 rounded-2xl p-4 shadow-sm mb-6 sticky top-20 z-30">
-              <div className="flex items-center gap-3 overflow-x-auto pb-2 sm:pb-0 hide-scrollbar">
-                <Globe2 className="text-slate-400 shrink-0 mr-2" size={20} />
-                {languages.map((lang) => (
-                  <button
-                    key={lang.code}
-                    onClick={() => setActiveLang(lang.code)}
-                    className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
-                      activeLang === lang.code
-                        ? 'bg-slate-900 text-white shadow-md'
-                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
-                    }`}
-                  >
-                    {lang.label}
-                  </button>
-                ))}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3 overflow-x-auto pb-2 sm:pb-0 hide-scrollbar">
+                  <Globe2 className="text-slate-400 shrink-0 mr-2" size={20} />
+                  {languages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => setActiveLang(lang.code)}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
+                        activeLang === lang.code
+                          ? 'bg-slate-900 text-white shadow-md'
+                          : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
+                      }`}
+                    >
+                      {lang.label}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={handleReadAloud}
+                  className={`inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition-all ${
+                    isSpeaking
+                      ? 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100'
+                      : 'border-slate-200 bg-white text-slate-700 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700'
+                  }`}
+                >
+                  {isSpeaking ? <Square size={16} /> : <Volume2 size={16} />}
+                  {isSpeaking ? 'Stop Reading' : 'Read Aloud'}
+                </button>
               </div>
             </div>
 
@@ -308,7 +378,7 @@ export default function SongDetail() {
                   <AnimatedTranslateButton label={`Translate to ${languages.find((lang) => lang.code === activeLang)?.label || 'this language'}`} />
                 </div>
               ) : (
-                <div className="space-y-8">
+                <div className="space-y-4">
                   {lyricsData.length === 0 && (
                     <div className="py-16 text-center">
                       <p className="text-lg font-bold text-slate-800 mb-2">No lyrics added yet</p>
@@ -320,23 +390,23 @@ export default function SongDetail() {
                     const hasTranslation = activeLang !== 'original' && line.translations[activeLang];
 
                     return (
-                      <div key={line.id} className="group relative flex items-start gap-4 p-4 -mx-4 rounded-2xl hover:bg-white transition-colors cursor-text">
-                        <div className="text-xs font-bold text-slate-300 mt-2 select-none w-4">
+                      <div key={line.id} className="group relative flex items-start gap-3 px-2 py-3 sm:px-3 sm:py-3 rounded-xl hover:bg-white/90 transition-colors cursor-text">
+                        <div className="text-[11px] font-bold text-slate-300 mt-1.5 select-none w-5">
                           {line.id}
                         </div>
 
                         <div className="flex-1">
                           {activeLang === 'original' ? (
-                            <p className="text-2xl sm:text-3xl font-bold text-slate-800 leading-snug">
+                            <p className="text-lg sm:text-xl font-semibold text-slate-800 leading-relaxed tracking-normal">
                               {line.original}
                             </p>
                           ) : (
                             <div>
-                              <p className="text-sm font-semibold text-slate-400 mb-1 leading-relaxed">
+                              <p className="text-sm font-medium text-slate-400 mb-1 leading-relaxed">
                                 {line.original}
                               </p>
                               {hasTranslation ? (
-                                <p className="text-2xl sm:text-3xl font-extrabold text-indigo-950 leading-snug">
+                                <p className="text-lg sm:text-xl font-semibold text-indigo-950 leading-relaxed">
                                   {line.translations[activeLang]}
                                 </p>
                               ) : (
@@ -348,7 +418,7 @@ export default function SongDetail() {
                           )}
                         </div>
 
-                        <div className="opacity-0 group-hover:opacity-100 absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-slate-900 p-1.5 rounded-xl shadow-xl transition-all translate-x-2 group-hover:translate-x-0">
+                        <div className="opacity-0 group-hover:opacity-100 absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-slate-900 p-1.5 rounded-xl shadow-xl transition-all translate-x-2 group-hover:translate-x-0">
                           <button className="p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors" title="Add Annotation">
                             <MessageSquare size={16} />
                           </button>
