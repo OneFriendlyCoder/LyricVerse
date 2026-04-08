@@ -8,11 +8,13 @@ export const API_ENDPOINTS = {
     LOGOUT: '/user/logout/',
     PROFILE: '/user/profile/',
     USER: '/user/',
+    SONGS: '/song/',
+    MY_SONGS: '/song/mine/',
 };
 
 export const ROLES = {
     USER: 'user',
-    VERIFIER: 'label',
+    LABEL: 'label',
 };
 
 export const LANGUAGES = [

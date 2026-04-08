@@ -1,7 +1,5 @@
     # your_app/management/commands/seed_songs.py
 
-
-
 from django.core.management.base import BaseCommand
 from api.models import LabelSong
 import random

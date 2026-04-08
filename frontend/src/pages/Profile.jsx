@@ -6,7 +6,7 @@ import Navbar from '../components/Navbar';
 
 import {
     User, Mail, Globe2, Bell, Shield, Trash2, LogOut,
-    AlertTriangle, X, Camera, ArrowLeft, CheckCircle2
+    AlertTriangle, X, Camera, ArrowLeft, CheckCircle2, Star
 } from 'lucide-react';
 
 export default function Profile() {
@@ -14,15 +14,17 @@ export default function Profile() {
 
     // Modals & Feedback State
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const [deleteInput, setDeleteInput] = useState('');
     const [saveStatus, setSaveStatus] = useState(''); // Gives feedback when saving
 
     // Real User Data State (matching your Django Model)
     const [user, setUser] = useState({
         id: null,
         username: '',
+        first_name: '',
+        last_name: '',
         email: '',
         bio: '',
+        rating: null,
         preferred_language: 'en',
         role:''
     });
@@ -38,8 +40,11 @@ export default function Profile() {
                 setUser({
                     id: response.data.id,
                     username: response.data.username || '',
+                    first_name: response.data.first_name || '',
+                    last_name: response.data.last_name || '',
                     email: response.data.email || '',
                     bio: response.data.bio || '',
+                    rating: response.data.rating ?? null,
                     preferred_language: response.data.preferred_language || 'en',
                     role: response.data.role || ''
                 });
@@ -70,7 +75,6 @@ export default function Profile() {
         setSaveStatus('Saving...');
         try {
             await axios.patch(BASE_URL + API_ENDPOINTS.PROFILE, {
-                username: user.username,
                 email: user.email,
                 bio: user.bio,
                 preferred_language: user.preferred_language
@@ -85,13 +89,15 @@ export default function Profile() {
         }
     };
 
+    const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username || 'Loading...';
+    const userRating = Number(user.rating) || 0;
+
     const handleDeleteAccount = async () => {
         try {
             // Django's ModelViewSet automatically creates a DELETE endpoint at /api/users/<id>/
             await axios.delete(`${BASE_URL}${API_ENDPOINTS.USER}${user.id}/`, {
                 withCredentials: true
             });
-            console.log("Account successfully deleted. Status:", response.status);
             setIsDeleteDialogOpen(false);
             navigate('/login'); // Redirect to login after deletion
         } catch (error) {
@@ -149,10 +155,22 @@ export default function Profile() {
                                     <Camera size={24} className="text-white" />
                                 </div>
                             </div>
-                            <h2 className="text-xl font-extrabold text-slate-900">{user.username || 'Loading...'}</h2>
+                            <h2 className="text-xl font-extrabold text-slate-900">{fullName}</h2>
                             <p className="text-sm text-slate-500 mb-4">{user.email || '...'}</p>
                             <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold border border-emerald-200/50">
                                 <CheckCircle2 size={14} /> {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'User'}
+                            </div>
+                            <div className="mt-4 flex items-center gap-2 rounded-full bg-amber-50 px-4 py-2 text-xs font-bold text-amber-700 border border-amber-200/70">
+                                <div className="flex items-center gap-0.5">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <Star
+                                            key={star}
+                                            size={13}
+                                            className={star <= Math.round(userRating) ? 'fill-amber-500 text-amber-500' : 'text-amber-200'}
+                                        />
+                                    ))}
+                                </div>
+                                <span>{userRating ? userRating.toFixed(1) : 'No rating yet'}</span>
                             </div>
                         </div>
 
@@ -189,8 +207,36 @@ export default function Profile() {
                                             <input
                                                 type="text"
                                                 value={user.username}
-                                                onChange={(e) => setUser({ ...user, username: e.target.value })}
-                                                className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all"
+                                                disabled
+                                                className="w-full pl-11 pr-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 font-medium cursor-not-allowed"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">First Name</label>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                <User className="h-5 w-5 text-slate-400" />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                value={user.first_name}
+                                                disabled
+                                                className="w-full pl-11 pr-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 font-medium cursor-not-allowed"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Last Name</label>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                <User className="h-5 w-5 text-slate-400" />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                value={user.last_name}
+                                                disabled
+                                                className="w-full pl-11 pr-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 font-medium cursor-not-allowed"
                                             />
                                         </div>
                                     </div>

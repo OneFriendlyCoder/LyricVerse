@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Search,
     Globe2,
     Heart,
     BookOpen,
-    SearchIcon,
     PlayCircle,
     TrendingUp,
     Sparkles,
@@ -22,41 +21,73 @@ export default function Explore() {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeLanguage, setActiveLanguage] = useState('All');
     const [activeGenre, setActiveGenre] = useState('All');
+    const [activeOwner, setActiveOwner] = useState('All');
 
-    // code 
-    const [languages, setLanguages] = useState([]);
-    const [genres, setGenres] = useState([]);
-    const [owners, setOwners] = useState(['All', 'User Contributed', 'Label Verified']); // static or API later
+    const [languages, setLanguages] = useState(['All']);
+    const [genres, setGenres] = useState(['All']);
+    const [owners] = useState(['All', 'Independent Songwriters', 'Label Verified']);
     const [allSongs, setAllSongs] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [fetchError, setFetchError] = useState('');
 
-    // useEffect(() => {
-    //     const fetchData = async () => {
-    //         try {
-    //             const [langRes, genreRes, songRes] = await Promise.all([
-    //                 fetch(`${BASE_URL}/languages/`),
-    //                 fetch(`${BASE_URL}/genre/`),
-    //                 // fetch(`${BASE_URL}/songs/`)
-    //             ]);
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setFetchError('');
+                const songRes = await fetch(`${BASE_URL}/label-songs/`, {
+                    credentials: 'include',
+                });
 
-    //             const languagesData = await langRes.json();
-    //             const genresData = await genreRes.json();
-    //             const songsData = await songRes.json();
+                if (songRes.status === 401 || songRes.status === 403) {
+                    throw new Error('Please log in to view label songs.');
+                }
 
-    //             // Add "All" manually
-    //             setLanguages(["All", ...languagesData]);
-    //             setGenres(["All", ...genresData]);
-    //             setAllSongs(songsData);
+                if (!songRes.ok) {
+                    throw new Error('Failed to fetch explore data');
+                }
 
-    //         } catch (error) {
-    //             console.error("Error fetching data:", error);
-    //         } finally {
-    //             setLoading(false);
-    //         }
-    //     };
+                const songsData = await songRes.json();
 
-    //     fetchData();
-    // }, []);
+                const normalizedSongs = songsData.map((song, index) => ({
+                    id: song.id,
+                    title: song.title ?? 'Untitled',
+                    artist: song.artist ?? 'Unknown artist',
+                    genre: song.genre_display ?? song.genre ?? 'Unknown',
+                    originalLang: song.original_language_display ?? song.original_language ?? 'Unknown',
+                    translatedTo: [],
+                    likes: Number(song.rating) || 0,
+                    annotations: 0,
+                    owner: 'Label Verified',
+                    color: [
+                        'from-blue-500 to-indigo-500',
+                        'from-amber-400 to-orange-500',
+                        'from-pink-500 to-rose-500',
+                        'from-emerald-400 to-teal-500',
+                        'from-violet-500 to-fuchsia-500',
+                        'from-cyan-400 to-blue-500',
+                    ][index % 6],
+                }));
+
+                setLanguages([
+                    'All',
+                    ...new Set(normalizedSongs.map((song) => song.originalLang).filter(Boolean)),
+                ]);
+                setGenres([
+                    'All',
+                    ...new Set(normalizedSongs.map((song) => song.genre).filter(Boolean)),
+                ]);
+                setAllSongs(normalizedSongs);
+
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                setFetchError(error.message || 'Unable to load songs right now.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
 
     // Filter Options
     // const languages = ['All', 'Hindi', 'Marathi', 'Tamil', 'English', 'Bengali'];
@@ -76,9 +107,10 @@ export default function Explore() {
     // Filtering Logic
     const filteredSongs = allSongs.filter(song => {
         const matchesSearch = song.title.toLowerCase().includes(searchQuery.toLowerCase()) || song.artist.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesLang = activeLanguage === 'All' || song.translatedTo.includes(activeLanguage);
+        const matchesLang = activeLanguage === 'All' || song.originalLang === activeLanguage || song.translatedTo.includes(activeLanguage);
         const matchesGenre = activeGenre === 'All' || song.genre === activeGenre;
-        return matchesSearch && matchesLang && matchesGenre;
+        const matchesOwner = activeOwner === 'All' || song.owner === activeOwner;
+        return matchesSearch && matchesLang && matchesGenre && matchesOwner;
     });
 
     return (
@@ -151,7 +183,7 @@ export default function Explore() {
                     </div>
 
                     {/* Genre Filter */}
-                    <div>
+                    <div className="mb-6">
                         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
                             <Music size={14} /> Genre
                         </h3>
@@ -180,8 +212,8 @@ export default function Explore() {
                             {owners.map(owner => (
                                 <button
                                     key={owner}
-                                    onClick={() => setActiveGenre(owner)}
-                                    className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-200 ${activeGenre === owner
+                                    onClick={() => setActiveOwner(owner)}
+                                    className={`px-5 py-2 rounded-full text-sm font-bold transition-all duration-200 ${activeOwner === owner
                                         ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200 transform scale-105'
                                         : 'bg-white border border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50/50'
                                         }`}
@@ -203,18 +235,27 @@ export default function Explore() {
                             <TrendingUp className="text-indigo-600" size={24} />
                             {searchQuery ? 'Search Results' : 'Trending Now'}
                         </h2>
-                        <p className="text-slate-500 text-sm mt-1">Showing {filteredSongs.length} songs</p>
+                        <p className="text-slate-500 text-sm mt-1">
+                            {loading ? 'Loading songs...' : `Showing ${filteredSongs.length} songs`}
+                        </p>
+                        {fetchError ? (
+                            <p className="text-sm text-red-500 mt-2">{fetchError}</p>
+                        ) : null}
                     </div>
                 </div>
 
                 {/* Songs Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                    {filteredSongs.length > 0 ? (
+                    {loading ? (
+                        <div className="col-span-full py-20 flex items-center justify-center text-slate-500">
+                            Loading songs...
+                        </div>
+                    ) : filteredSongs.length > 0 ? (
                         filteredSongs.map((song) => (
                             <div
                                 key={song.id}
                                 className="group bg-white border border-slate-200/60 rounded-[2rem] p-4 shadow-sm hover:shadow-2xl hover:shadow-indigo-100/50 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col"
-                                onClick={() => navigate('/song-view')} // Setup this route next!
+                                onClick={() => navigate(`/song/${song.id}`)} // Setup this route next!
                             >
 
                                 {/* Abstract Album Art */}
@@ -244,7 +285,9 @@ export default function Explore() {
                                     <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-5 bg-slate-50 w-fit px-3 py-1.5 rounded-lg border border-slate-100">
                                         <span className="text-slate-600">{song.originalLang}</span>
                                         <ChevronRight size={14} className="text-indigo-400" />
-                                        <span className="text-indigo-600">{song.translatedTo.join(', ')}</span>
+                                        <span className="text-indigo-600">
+                                            {song.translatedTo.length > 0 ? song.translatedTo.join(', ') : 'Original'}
+                                        </span>
                                     </div>
                                 </div>
 
@@ -278,7 +321,7 @@ export default function Explore() {
                                 We couldn't find any songs matching your exact search and filters. Try adjusting your categories or search terms.
                             </p>
                             <button
-                                onClick={() => { setSearchQuery(''); setActiveGenre('All'); setActiveLanguage('All'); }}
+                                onClick={() => { setSearchQuery(''); setActiveGenre('All'); setActiveLanguage('All'); setActiveOwner('All'); }}
                                 className="mt-6 px-6 py-3 bg-white border-2 border-slate-200 text-slate-700 hover:border-indigo-300 hover:text-indigo-600 rounded-xl font-bold transition-colors"
                             >
                                 Clear all filters

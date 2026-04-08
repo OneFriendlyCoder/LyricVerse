@@ -4,8 +4,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.hashers import check_password, make_password
-from .models import User, Song, Genre, Languages
-from .serializers import UserSerializer, SongSerializer, GenreSerializer, LanguagesSerializer
+from .models import User, Song, Genre, Languages, LabelSong
+from .serializers import UserSerializer, SongSerializer, GenreSerializer, LanguagesSerializer, LabelSongSerializer, LabelSongDetailSerializer
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -122,16 +122,37 @@ class SongViewSet(viewsets.ModelViewSet):
     serializer_class = SongSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]
+        return [permission() for permission in self.permission_classes]
+
     def get_queryset(self):
         user = self.request.user
-        
+
+        if self.action in ['create', 'update', 'partial_update', 'destroy', 'submit']:
+            if not user.is_authenticated:
+                return Song.objects.none()
+            if user.role == 'verifier':
+                return Song.objects.all().order_by('-created_at')
+            return Song.objects.filter(author=user).order_by('-created_at')
+
+        if not user.is_authenticated:
+            return Song.objects.filter(status='PUBLISHED').order_by('-created_at')
+
         if user.role == 'verifier':
             return Song.objects.all().order_by('-created_at')
             
-        return Song.objects.filter(status='PUBLISHED') | Song.objects.filter(author=user)
+        return (Song.objects.filter(status='PUBLISHED') | Song.objects.filter(author=user)).order_by('-created_at')
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def mine(self, request):
+        user_songs = Song.objects.filter(author=request.user).order_by('-created_at')
+        serializer = self.get_serializer(user_songs, many=True)
+        return Response(serializer.data)
 
 
     @action(detail=True, methods=['post'])
@@ -184,4 +205,13 @@ class LanguagesViewSet(viewsets.ModelViewSet):
         http_method_names = ['get']
 
 
+class LabelSongViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = LabelSongSerializer
+    # permission_classes = [IsAuthenticated]
+    http_method_names = ['get']
+    queryset = LabelSong.objects.select_related('label_account').all().order_by('-created_at')
 
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return LabelSongDetailSerializer
+        return LabelSongSerializer

@@ -1,10 +1,10 @@
 from rest_framework import serializers
-from .models import User, Song, Languages, Genre
+from .models import User, Song, Languages, Genre, LabelSong
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username','first_name', 'preferred_language', 'email', 'bio','role']
+        fields = ['id', 'username', 'first_name', 'last_name', 'rating', 'preferred_language', 'email', 'bio', 'role']
 
 class LanguagesSerializer(serializers.ModelSerializer):
     display_name = serializers.CharField(source='get_name_display')
@@ -21,13 +21,57 @@ class GenreSerializer(serializers.ModelSerializer):
 
 class SongSerializer(serializers.ModelSerializer):
     author_username = serializers.ReadOnlyField(source='author.username')
+    genre_display = serializers.CharField(source='get_genre_display', read_only=True)
+    original_language_display = serializers.CharField(source='get_original_language_display', read_only=True)
 
     class Meta:
         model = Song
         fields = [
-            'id', 'title', 'artist', 'movie', 'rating', 'genre', 
-            'original_language', 'original_lyrics', 'created_at', 
-            'status', 'author', 'author_username'
+            'id',
+            'title',
+            'rating',
+            'genre',
+            'genre_display',
+            'original_language',
+            'original_language_display',
+            'original_lyrics',
+            'created_at',
+            'status',
+            'author',
+            'author_username'
         ]
         # These fields cannot be modified directly via standard POST/PUT requests
         read_only_fields = ['author', 'created_at', 'status']
+
+
+class LabelSongSerializer(serializers.ModelSerializer):
+    label_account_username = serializers.ReadOnlyField(source='label_account.username')
+    genre_display = serializers.CharField(source='get_genre_display', read_only=True)
+    original_language_display = serializers.CharField(source='get_original_language_display', read_only=True)
+
+    class Meta:
+        model = LabelSong
+        fields = [
+            'id',
+            'title',
+            'artist',
+            'movie',
+            'rating',
+            'genre',
+            'genre_display',
+            'original_language',
+            'original_language_display',
+            # 'official_lyrics',
+            # 'created_at',
+            'label_account',
+            'label_account_username',
+        ]
+        read_only_fields = ['label_account', 'created_at']
+
+
+class LabelSongDetailSerializer(LabelSongSerializer):
+    class Meta(LabelSongSerializer.Meta):
+        fields = LabelSongSerializer.Meta.fields + [
+            'official_lyrics',
+            'created_at',
+        ]

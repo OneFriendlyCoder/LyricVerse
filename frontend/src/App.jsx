@@ -10,6 +10,8 @@ import LyricWiki from "./pages/LyricWiki.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import Annotations from "./pages/Annotations.jsx";
 import { ToastProvider } from './components/Toast.jsx';
+import SongDetail from "./pages/SongDetail.jsx";
+
 
 
 function App() {
@@ -42,9 +44,11 @@ function App() {
         {/* The annotation page will load at the /annotations URL */}
         <Route path="/annotations" element={<Annotations />} />  
 
-
         {/* Admin Dashboard */}
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        
+        {/* The Song Detail page will load at the /song/:id URL, where :id is a dynamic parameter for the song ID */}
+        <Route path="/song/:id" element={<SongDetail />} />
 
       </Routes>
     </BrowserRouter>
