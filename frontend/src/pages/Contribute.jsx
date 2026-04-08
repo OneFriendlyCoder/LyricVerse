@@ -524,42 +524,6 @@ export default function Contribute() {
               </div>
             </div>
 
-            <div className="bg-white/80 backdrop-blur-md border border-slate-200/60 rounded-2xl p-6 shadow-sm">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">Publishing Controls</h2>
-                  <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-                    Drafts save privately while you write. Opening the song for annotation makes it visible in Explore under independent songwriters, and final publish permanently locks the song for everyone including the author.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-full ${annotationAccessOpen ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>
-                    {annotationAccessOpen ? <LockOpen size={18} /> : <Lock size={18} />}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-slate-900">Allow public annotations</p>
-                    <p className="text-xs text-slate-500">
-                      {songStatus === 'DRAFT'
-                        ? 'Private drafts are not discoverable and cannot receive annotations.'
-                        : songStatus === 'PENDING'
-                          ? 'Community annotations are open right now in Explore.'
-                          : 'Final publish closes annotations and locks the editor.'}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    disabled
-                    aria-pressed={annotationAccessOpen}
-                    className={`relative h-7 w-12 rounded-full transition-colors ${annotationAccessOpen ? 'bg-emerald-500' : 'bg-slate-300'} disabled:cursor-not-allowed disabled:opacity-60`}
-                  >
-                    <span
-                      className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${annotationAccessOpen ? 'translate-x-6' : 'translate-x-1'}`}
-                    />
-                  </button>
-                </div>
-              </div>
-            </div>
 
             <div className="bg-white/80 backdrop-blur-md border border-slate-200/60 rounded-2xl shadow-sm overflow-hidden flex flex-col flex-grow min-h-[500px]">
               <div className="border-b border-slate-200/60 bg-slate-50/50 p-3 flex flex-wrap items-center justify-between gap-2">

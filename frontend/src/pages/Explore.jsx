@@ -12,7 +12,7 @@ import {
     ChevronRight
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
-import { BASE_URL } from '../utils/constants';
+import { API_ENDPOINTS, BASE_URL } from '../utils/constants';
 
 export default function Explore() {
     const navigate = useNavigate();
@@ -34,7 +34,10 @@ export default function Explore() {
         const fetchData = async () => {
             try {
                 setFetchError('');
-                const [communityResponse, labelResponse] = await Promise.all([
+                const [profileResponse, communityResponse, labelResponse] = await Promise.all([
+                    fetch(`${BASE_URL}${API_ENDPOINTS.PROFILE}`, {
+                        credentials: 'include',
+                    }),
                     fetch(`${BASE_URL}/song/`, {
                         credentials: 'include',
                     }),
@@ -55,6 +58,13 @@ export default function Explore() {
                     communityResponse.json(),
                     labelResponse.json(),
                 ]);
+                const currentUsername = profileResponse.ok ? (await profileResponse.json()).username : null;
+                const visibleCommunitySongs = currentUsername
+                    ? communitySongs.filter((song) => song.author_username !== currentUsername)
+                    : communitySongs;
+                const visibleLabelSongs = currentUsername
+                    ? labelSongs.filter((song) => song.label_account_username !== currentUsername)
+                    : labelSongs;
 
                 const palette = [
                     'from-blue-500 to-indigo-500',
@@ -66,7 +76,7 @@ export default function Explore() {
                 ];
 
                 const normalizedSongs = [
-                    ...communitySongs.map((song, index) => ({
+                    ...visibleCommunitySongs.map((song, index) => ({
                         id: song.id,
                         title: song.title ?? 'Untitled',
                         artist: song.author_username ?? 'Independent songwriter',
@@ -78,10 +88,18 @@ export default function Explore() {
                         owner: song.owner_type ?? 'Independent Songwriters',
                         color: palette[index % palette.length],
                         status: song.status,
-                        statusLabel: song.status_display ?? song.status ?? 'Unknown',
-                        route: `/song/${song.id}`,
+                        statusLabel:
+                            song.status === 'PENDING'
+                                ? song.can_annotate
+                                    ? 'Annotations Open'
+                                    : 'Annotations Paused'
+                                : song.status_display ?? song.status ?? 'Unknown',
+                        route:
+                            song.status === 'PENDING' && song.can_annotate
+                                ? `/annotate/${song.id}`
+                                : `/song/${song.id}`,
                     })),
-                    ...labelSongs.map((song, index) => ({
+                    ...visibleLabelSongs.map((song, index) => ({
                         id: `label-${song.id}`,
                         title: song.title ?? 'Untitled',
                         artist: song.artist ?? 'Unknown artist',
@@ -91,10 +109,10 @@ export default function Explore() {
                         likes: Number(song.rating) || 0,
                         annotations: 0,
                         owner: 'Label Verified',
-                        color: palette[(index + communitySongs.length) % palette.length],
+                        color: palette[(index + visibleCommunitySongs.length) % palette.length],
                         status: 'PUBLISHED',
                         statusLabel: 'Published',
-                        route: null,
+                        route: `/label-song/${song.id}`,
                     })),
                 ];
 

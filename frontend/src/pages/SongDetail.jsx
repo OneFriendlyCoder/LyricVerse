@@ -36,6 +36,7 @@ function AnimatedTranslateButton({ label, fullWidth = false }) {
 
 export default function SongDetail() {
   const { id } = useParams();
+  const isLabelSong = window.location.pathname.startsWith('/label-song/');
 
   const [activeLang, setActiveLang] = useState('original');
   const [isFavorite, setIsFavorite] = useState(false);
@@ -52,7 +53,7 @@ export default function SongDetail() {
         setLoading(true);
         setFetchError('');
 
-        const response = await fetch(`${BASE_URL}/song/${id}/`, {
+        const response = await fetch(`${BASE_URL}${isLabelSong ? `/label-songs/${id}/` : `/song/${id}/`}`, {
           credentials: 'include',
         });
 
@@ -71,7 +72,7 @@ export default function SongDetail() {
     };
 
     fetchSong();
-  }, [id]);
+  }, [id, isLabelSong]);
 
   const normalizedSong = useMemo(() => {
     if (!songData) {
@@ -85,7 +86,7 @@ export default function SongDetail() {
       title: songData.title || 'Untitled Song',
       genreLabel: songData.genre_display || songData.genre || 'Unknown Genre',
       languageLabel: songData.original_language_display || songData.original_language || 'Unknown Language',
-      authorLabel: songData.author_username || 'Unknown Author',
+      authorLabel: songData.author_username || songData.label_account_username || 'Unknown Author',
       ratingValue: Number(songData.rating) || 0,
       likes: Math.max(Math.round((Number(songData.rating) || 0) * 248), 0),
       coverColor: ['from-indigo-500 to-violet-600', 'from-sky-500 to-indigo-600', 'from-amber-500 to-orange-600'][Number(songData.id) % 3],
@@ -94,13 +95,13 @@ export default function SongDetail() {
           ? createdAt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
           : 'Recently added',
       aboutText: songData.original_lyrics
-        ? `Written by ${songData.author_username || 'the community'} in ${songData.original_language_display || songData.original_language || 'its original language'}, this entry is available in Lyricsverse with its complete original lyrics and verification status.`
-        : `Written by ${songData.author_username || 'the community'}, this song is available in Lyricsverse and ready for contributors to expand with richer translations and annotations.`,
+        ? `Written by ${songData.author_username || songData.label_account_username || 'the community'} in ${songData.original_language_display || songData.original_language || 'its original language'}, this entry is available in Lyricsverse with its complete original lyrics and verification status.`
+        : `Written by ${songData.author_username || songData.label_account_username || 'the community'}, this song is available in Lyricsverse and ready for contributors to expand with richer translations and annotations.`,
     };
   }, [songData]);
 
   const lyricsData = useMemo(() => {
-    const rawLyrics = normalizedSong?.original_lyrics || '';
+    const rawLyrics = normalizedSong?.original_lyrics || normalizedSong?.official_lyrics || '';
 
     return rawLyrics
       .split('\n')
