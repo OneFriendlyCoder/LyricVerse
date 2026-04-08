@@ -34,39 +34,69 @@ export default function Explore() {
         const fetchData = async () => {
             try {
                 setFetchError('');
-                const songRes = await fetch(`${BASE_URL}/label-songs/`, {
-                    credentials: 'include',
-                });
+                const [communityResponse, labelResponse] = await Promise.all([
+                    fetch(`${BASE_URL}/song/`, {
+                        credentials: 'include',
+                    }),
+                    fetch(`${BASE_URL}/label-songs/`, {
+                        credentials: 'include',
+                    }),
+                ]);
 
-                if (songRes.status === 401 || songRes.status === 403) {
-                    throw new Error('Please log in to view label songs.');
+                if (!communityResponse.ok) {
+                    throw new Error('Failed to fetch independent songwriter songs.');
                 }
 
-                if (!songRes.ok) {
-                    throw new Error('Failed to fetch explore data');
+                if (!labelResponse.ok) {
+                    throw new Error('Failed to fetch label songs.');
                 }
 
-                const songsData = await songRes.json();
+                const [communitySongs, labelSongs] = await Promise.all([
+                    communityResponse.json(),
+                    labelResponse.json(),
+                ]);
 
-                const normalizedSongs = songsData.map((song, index) => ({
-                    id: song.id,
-                    title: song.title ?? 'Untitled',
-                    artist: song.artist ?? 'Unknown artist',
-                    genre: song.genre_display ?? song.genre ?? 'Unknown',
-                    originalLang: song.original_language_display ?? song.original_language ?? 'Unknown',
-                    translatedTo: [],
-                    likes: Number(song.rating) || 0,
-                    annotations: 0,
-                    owner: 'Label Verified',
-                    color: [
-                        'from-blue-500 to-indigo-500',
-                        'from-amber-400 to-orange-500',
-                        'from-pink-500 to-rose-500',
-                        'from-emerald-400 to-teal-500',
-                        'from-violet-500 to-fuchsia-500',
-                        'from-cyan-400 to-blue-500',
-                    ][index % 6],
-                }));
+                const palette = [
+                    'from-blue-500 to-indigo-500',
+                    'from-amber-400 to-orange-500',
+                    'from-pink-500 to-rose-500',
+                    'from-emerald-400 to-teal-500',
+                    'from-violet-500 to-fuchsia-500',
+                    'from-cyan-400 to-blue-500',
+                ];
+
+                const normalizedSongs = [
+                    ...communitySongs.map((song, index) => ({
+                        id: song.id,
+                        title: song.title ?? 'Untitled',
+                        artist: song.author_username ?? 'Independent songwriter',
+                        genre: song.genre_display ?? song.genre ?? 'Unknown',
+                        originalLang: song.original_language_display ?? song.original_language ?? 'Unknown',
+                        translatedTo: [],
+                        likes: Number(song.rating) || 0,
+                        annotations: song.can_annotate ? 1 : 0,
+                        owner: song.owner_type ?? 'Independent Songwriters',
+                        color: palette[index % palette.length],
+                        status: song.status,
+                        statusLabel: song.status_display ?? song.status ?? 'Unknown',
+                        route: `/song/${song.id}`,
+                    })),
+                    ...labelSongs.map((song, index) => ({
+                        id: `label-${song.id}`,
+                        title: song.title ?? 'Untitled',
+                        artist: song.artist ?? 'Unknown artist',
+                        genre: song.genre_display ?? song.genre ?? 'Unknown',
+                        originalLang: song.original_language_display ?? song.original_language ?? 'Unknown',
+                        translatedTo: [],
+                        likes: Number(song.rating) || 0,
+                        annotations: 0,
+                        owner: 'Label Verified',
+                        color: palette[(index + communitySongs.length) % palette.length],
+                        status: 'PUBLISHED',
+                        statusLabel: 'Published',
+                        route: null,
+                    })),
+                ];
 
                 setLanguages([
                     'All',
@@ -254,8 +284,8 @@ export default function Explore() {
                         filteredSongs.map((song) => (
                             <div
                                 key={song.id}
-                                className="group bg-white border border-slate-200/60 rounded-[2rem] p-4 shadow-sm hover:shadow-2xl hover:shadow-indigo-100/50 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col"
-                                onClick={() => navigate(`/song/${song.id}`)} // Setup this route next!
+                                className={`group bg-white border border-slate-200/60 rounded-[2rem] p-4 shadow-sm hover:shadow-2xl hover:shadow-indigo-100/50 hover:-translate-y-1 transition-all duration-300 flex flex-col ${song.route ? 'cursor-pointer' : 'cursor-default'}`}
+                                onClick={() => song.route && navigate(song.route)}
                             >
 
                                 {/* Abstract Album Art */}
@@ -274,12 +304,16 @@ export default function Explore() {
                                     <div className="absolute top-3 right-3 bg-white/20 backdrop-blur-md border border-white/30 text-white text-xs font-bold px-3 py-1.5 rounded-full">
                                         {song.genre}
                                     </div>
+                                    <div className="absolute top-3 left-3 bg-slate-950/30 backdrop-blur-md border border-white/20 text-white text-[11px] font-bold px-3 py-1.5 rounded-full">
+                                        {song.statusLabel}
+                                    </div>
                                 </div>
 
                                 {/* Song Info */}
                                 <div className="px-2 flex-grow">
                                     <h3 className="text-xl font-extrabold text-slate-900 mb-1 line-clamp-1">{song.title}</h3>
                                     <p className="text-sm font-medium text-slate-500 mb-4">{song.artist}</p>
+                                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">{song.owner}</p>
 
                                     {/* Translation Path */}
                                     <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-5 bg-slate-50 w-fit px-3 py-1.5 rounded-lg border border-slate-100">

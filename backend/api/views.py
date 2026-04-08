@@ -2,8 +2,10 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.hashers import check_password, make_password
+from django.db.models import Q
 from .models import User, Song, Genre, Languages, LabelSong
 from .serializers import UserSerializer, SongSerializer, GenreSerializer, LanguagesSerializer, LabelSongSerializer, LabelSongDetailSerializer
 
@@ -129,24 +131,33 @@ class SongViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        base_queryset = Song.objects.select_related('author').order_by('-created_at')
 
-        if self.action in ['create', 'update', 'partial_update', 'destroy', 'submit']:
+        if self.action in ['create', 'update', 'partial_update', 'destroy', 'submit', 'final_publish']:
             if not user.is_authenticated:
                 return Song.objects.none()
             if user.role == 'verifier':
-                return Song.objects.all().order_by('-created_at')
-            return Song.objects.filter(author=user).order_by('-created_at')
+                return base_queryset
+            return base_queryset.filter(author=user)
 
         if not user.is_authenticated:
-            return Song.objects.filter(status='PUBLISHED').order_by('-created_at')
+            return base_queryset.filter(status__in=['PENDING', 'PUBLISHED'])
 
         if user.role == 'verifier':
-            return Song.objects.all().order_by('-created_at')
+            return base_queryset
             
-        return (Song.objects.filter(status='PUBLISHED') | Song.objects.filter(author=user)).order_by('-created_at')
+        return base_queryset.filter(Q(status__in=['PENDING', 'PUBLISHED']) | Q(author=user)).distinct()
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+    def perform_update(self, serializer):
+        song = self.get_object()
+
+        if song.status == 'PUBLISHED':
+            raise ValidationError({"error": "Published songs are locked and cannot be edited."})
+
+        serializer.save()
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def mine(self, request):
@@ -163,11 +174,35 @@ class SongViewSet(viewsets.ModelViewSet):
             return Response({"error": "You can only submit your own songs."}, status=status.HTTP_403_FORBIDDEN)
             
         if song.status != 'DRAFT':
-            return Response({"error": "Only draft songs can be submitted."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Only draft songs can be opened for community annotation."}, status=status.HTTP_400_BAD_REQUEST)
 
         song.status = 'PENDING'
         song.save()
-        return Response({"message": "Song submitted for verification!", "status": song.status})
+        serializer = self.get_serializer(song)
+        return Response({
+            "message": "Song is now open for community annotation.",
+            "status": song.status,
+            "song": serializer.data,
+        })
+
+    @action(detail=True, methods=['post'])
+    def final_publish(self, request, pk=None):
+        song = self.get_object()
+
+        if song.author != request.user:
+            return Response({"error": "You can only final publish your own songs."}, status=status.HTTP_403_FORBIDDEN)
+
+        if song.status != 'PENDING':
+            return Response({"error": "Only songs in the annotation stage can be finally published."}, status=status.HTTP_400_BAD_REQUEST)
+
+        song.status = 'PUBLISHED'
+        song.save()
+        serializer = self.get_serializer(song)
+        return Response({
+            "message": f"'{song.title}' is now finally published and locked for editing.",
+            "status": song.status,
+            "song": serializer.data,
+        })
 
     @action(detail=False, methods=['get'])
     def pending(self, request):

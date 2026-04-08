@@ -25,13 +25,13 @@ import { API_ENDPOINTS, BASE_URL, LANGUAGES } from '../utils/constants';
 const STATUS_STYLES = {
   Published: 'bg-emerald-50 text-emerald-700 border border-emerald-200/50',
   Draft: 'bg-amber-50 text-amber-700 border border-amber-200/50',
-  Pending: 'bg-sky-50 text-sky-700 border border-sky-200/50',
+  'Open for Annotation': 'bg-sky-50 text-sky-700 border border-sky-200/50',
 };
 
 const STATUS_LABELS = {
   PUBLISHED: 'Published',
   DRAFT: 'Draft',
-  PENDING: 'Pending',
+  PENDING: 'Open for Annotation',
 };
 
 const languageLabelMap = LANGUAGES.reduce((acc, language) => {
@@ -152,15 +152,14 @@ export default function Dashboard() {
 
   const dashboardStats = useMemo(() => {
     const publishedCount = normalizedSongs.filter((song) => song.status === 'Published').length;
-    const pendingCount = normalizedSongs.filter((song) => song.status === 'Pending').length;
-    const totalViews = normalizedSongs.reduce((sum, song) => sum + song.views, 0);
+    const pendingCount = normalizedSongs.filter((song) => song.status === 'Open for Annotation').length;
     const averageRating = normalizedSongs.length
       ? (normalizedSongs.reduce((sum, song) => sum + song.rating, 0) / normalizedSongs.length).toFixed(1)
       : '0.0';
 
     return [
       { label: 'Total Songs', value: normalizedSongs.length, icon: Music, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-      { label: 'Pending Review', value: pendingCount, icon: Clock3, color: 'text-sky-600', bg: 'bg-sky-50' },
+      { label: 'Open for Annotation', value: pendingCount, icon: Clock3, color: 'text-sky-600', bg: 'bg-sky-50' },
       { label: 'Published', value: publishedCount, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
       { label: 'Rating', value: averageRating, icon: Star, color: 'text-amber-600', bg: 'bg-amber-50' },
     ];
@@ -286,7 +285,7 @@ export default function Dashboard() {
 
         <div className="bg-white border border-slate-200/60 rounded-2xl p-2 sm:p-4 shadow-sm mb-8 flex flex-col sm:flex-row gap-4 justify-between items-center sticky top-24 z-30 backdrop-blur-xl bg-white/80">
           <div className="flex bg-slate-100/80 p-1 rounded-xl w-full sm:w-auto overflow-x-auto">
-            {['All', 'Published', 'Pending', 'Draft'].map((tab) => (
+            {['All', 'Published', 'Open for Annotation', 'Draft'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -338,10 +337,11 @@ export default function Dashboard() {
                     </button>
                     <div className="absolute right-0 mt-1 w-36 bg-white border border-slate-200 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20 overflow-hidden origin-top-right transform scale-95 group-hover:scale-100">
                       <button
-                        onClick={() => navigate('/contribute')}
-                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-indigo-600 font-medium transition-colors"
+                        onClick={() => navigate(`/contribute?songId=${song.id}`)}
+                        disabled={song.status === 'Published'}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-indigo-600 font-medium transition-colors disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-transparent disabled:hover:text-slate-300"
                       >
-                        <Edit3 size={14} /> Edit
+                        <Edit3 size={14} /> {song.status === 'Published' ? 'Locked' : 'Edit'}
                       </button>
                       {song.status === 'Published' && (
                         <button className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-indigo-600 font-medium transition-colors">

@@ -291,6 +291,11 @@ export default function SongDetail() {
               <span className="bg-white text-slate-700 px-3 py-1 rounded-full text-xs font-bold border border-slate-200 tracking-wide flex items-center gap-1.5">
                 <User size={12} /> {normalizedSong.authorLabel}
               </span>
+              {normalizedSong.status === 'PENDING' && (
+                <span className="flex items-center gap-1 text-sky-600 text-xs font-bold">
+                  <Languages size={14} /> Open for Annotation
+                </span>
+              )}
               {normalizedSong.status === 'PUBLISHED' && (
                 <span className="flex items-center gap-1 text-emerald-600 text-xs font-bold">
                   <CheckCircle2 size={14} /> Verified

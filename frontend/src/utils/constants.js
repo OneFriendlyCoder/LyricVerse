@@ -10,6 +10,10 @@ export const API_ENDPOINTS = {
     USER: '/user/',
     SONGS: '/song/',
     MY_SONGS: '/song/mine/',
+    SONG_SUBMIT: (songId) => `/song/${songId}/submit/`,
+    SONG_FINAL_PUBLISH: (songId) => `/song/${songId}/final_publish/`,
+    LANGUAGES: '/languages/',
+    GENRES: '/genre/',
 };
 
 export const ROLES = {
