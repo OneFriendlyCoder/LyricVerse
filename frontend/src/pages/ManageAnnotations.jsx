@@ -22,6 +22,95 @@ const STATUS_STYLES = {
   rejected: 'bg-rose-50 text-rose-700 border border-rose-200',
 };
 
+/** Compute a line-by-line diff using simple LCS. Returns an array of
+ *  { type: 'equal'|'removed'|'added', line: string } objects. */
+function computeLineDiff(original, proposed) {
+  const a = original.split('\n');
+  const b = proposed.split('\n');
+  const m = a.length, n = b.length;
+
+  // Build LCS table
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]);
+
+  // Backtrack
+  const result = [];
+  let i = m, j = n;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && a[i - 1] === b[j - 1]) {
+      result.unshift({ type: 'equal', line: a[i - 1] });
+      i--; j--;
+    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+      result.unshift({ type: 'added', line: b[j - 1] });
+      j--;
+    } else {
+      result.unshift({ type: 'removed', line: a[i - 1] });
+      i--;
+    }
+  }
+  return result;
+}
+
+/** Render a compact diff: changed lines + CONTEXT surrounding lines. */
+const CONTEXT = 2;
+function DiffView({ original, proposed }) {
+  const diff = computeLineDiff(original || '', proposed || '');
+
+  // Collect indices of non-equal lines
+  const changedIdx = new Set();
+  diff.forEach((d, i) => { if (d.type !== 'equal') changedIdx.add(i); });
+
+  // Expand context
+  const visible = new Set();
+  changedIdx.forEach((idx) => {
+    for (let k = Math.max(0, idx - CONTEXT); k <= Math.min(diff.length - 1, idx + CONTEXT); k++)
+      visible.add(k);
+  });
+
+  if (changedIdx.size === 0) {
+    return (
+      <p className="text-xs text-slate-400 italic px-2 py-3">No differences — proposed lyrics are identical to the original.</p>
+    );
+  }
+
+  const rows = [];
+  let prevVisible = true;
+  diff.forEach((d, i) => {
+    if (!visible.has(i)) {
+      if (prevVisible) rows.push({ type: 'separator', key: `sep-${i}` });
+      prevVisible = false;
+      return;
+    }
+    rows.push({ ...d, key: i });
+    prevVisible = true;
+  });
+
+  const rowStyle = {
+    equal:   'bg-transparent text-slate-600',
+    removed: 'bg-rose-50 text-rose-700',
+    added:   'bg-emerald-50 text-emerald-800',
+  };
+  const prefix = { equal: ' ', removed: '−', added: '+' };
+
+  return (
+    <div className="rounded-xl border border-slate-200 overflow-hidden font-mono text-sm">
+      {rows.map((row) =>
+        row.type === 'separator' ? (
+          <div key={row.key} className="px-3 py-0.5 bg-slate-100 text-slate-400 text-xs select-none">···</div>
+        ) : (
+          <div key={row.key} className={`flex items-start gap-2 px-3 py-1 leading-6 ${rowStyle[row.type]}`}>
+            <span className="select-none w-4 shrink-0 text-center font-bold opacity-60">{prefix[row.type]}</span>
+            <span className="whitespace-pre-wrap break-all">{row.line || <span className="opacity-30">↵</span>}</span>
+          </div>
+        )
+      )}
+    </div>
+  );
+}
+
+
 export default function ManageAnnotations() {
   const { songId } = useParams();
   const navigate = useNavigate();
@@ -225,13 +314,21 @@ export default function ManageAnnotations() {
                           </div>
                         )}
 
-                        {/* Proposed lyrics */}
+                        {/* Diff view */}
                         <div className="mb-4">
-                          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Proposed Lyrics</p>
-                          <pre className="whitespace-pre-wrap text-sm leading-7 text-slate-800 bg-white border border-slate-200 rounded-xl p-4 max-h-52 overflow-y-auto font-sans">
-                            {annotation.proposed_lyrics}
-                          </pre>
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Changes</p>
+                            <span className="text-[10px] font-semibold text-slate-400">
+                              <span className="text-rose-500">−</span> removed &nbsp;
+                              <span className="text-emerald-600">+</span> added
+                            </span>
+                          </div>
+                          <DiffView
+                            original={song?.original_lyrics || ''}
+                            proposed={annotation.proposed_lyrics}
+                          />
                         </div>
+
 
                         {/* Action buttons — only for pending */}
                         {isPending && (
