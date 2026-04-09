@@ -148,8 +148,8 @@ export default function SongDetail() {
       activeLang === 'original'
         ? lyricsData.map((line) => line.original).join('. ')
         : lyricsData
-            .map((line) => line.translations[activeLang] || line.original)
-            .join('. ');
+          .map((line) => line.translations[activeLang] || line.original)
+          .join('. ');
 
     if (!textToRead.trim()) {
       return;
@@ -354,11 +354,10 @@ export default function SongDetail() {
                     <button
                       key={lang.code}
                       onClick={() => setActiveLang(lang.code)}
-                      className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all shrink-0 ${
-                        activeLang === lang.code
-                          ? 'bg-slate-900 text-white shadow-md'
-                          : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
-                      }`}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all shrink-0 ${activeLang === lang.code
+                        ? 'bg-slate-900 text-white shadow-md'
+                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
+                        }`}
                     >
                       {lang.label}
                     </button>
@@ -368,11 +367,10 @@ export default function SongDetail() {
                 {/* Read Aloud button — stays fixed on the right, never overlaps the scroll strip */}
                 <button
                   onClick={handleReadAloud}
-                  className={`shrink-0 inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition-all ${
-                    isSpeaking
-                      ? 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100'
-                      : 'border-slate-200 bg-white text-slate-700 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700'
-                  }`}
+                  className={`shrink-0 inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition-all ${isSpeaking
+                    ? 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100'
+                    : 'border-slate-200 bg-white text-slate-700 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700'
+                    }`}
                 >
                   {isSpeaking ? <Square size={16} /> : <Volume2 size={16} />}
                   <span className="hidden sm:inline">{isSpeaking ? 'Stop' : 'Read Aloud'}</span>
