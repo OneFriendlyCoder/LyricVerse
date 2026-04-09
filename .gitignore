@@ -13,3 +13,6 @@ build/
 
 # OS files
 .DS_Store
+
+# Python
+__pycache__/
