@@ -340,14 +340,21 @@ export default function SongDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-up" style={{ animationDelay: '0.1s' }}>
           <div className="lg:col-span-8">
             <div className="bg-white/80 backdrop-blur-md border border-slate-200/60 rounded-2xl p-4 shadow-sm mb-6 sticky top-20 z-30">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-3 overflow-x-auto pb-2 sm:pb-0 hide-scrollbar">
-                  <Globe2 className="text-slate-400 shrink-0 mr-2" size={20} />
+              <style>{`
+                .lang-scroll::-webkit-scrollbar { height: 4px; }
+                .lang-scroll::-webkit-scrollbar-track { background: transparent; }
+                .lang-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 99px; }
+                .lang-scroll::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+              `}</style>
+              <div className="flex items-center gap-3">
+                {/* Language scroll strip with a thin scrollbar sitting below the buttons */}
+                <div className="lang-scroll flex items-center gap-2 flex-1 min-w-0 overflow-x-auto pb-2" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e2e8f0 transparent' }}>
+                  <Globe2 className="text-slate-400 shrink-0" size={20} />
                   {languages.map((lang) => (
                     <button
                       key={lang.code}
                       onClick={() => setActiveLang(lang.code)}
-                      className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
+                      className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all shrink-0 ${
                         activeLang === lang.code
                           ? 'bg-slate-900 text-white shadow-md'
                           : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
@@ -357,19 +364,23 @@ export default function SongDetail() {
                     </button>
                   ))}
                 </div>
+
+                {/* Read Aloud button — stays fixed on the right, never overlaps the scroll strip */}
                 <button
                   onClick={handleReadAloud}
-                  className={`inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition-all ${
+                  className={`shrink-0 inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition-all ${
                     isSpeaking
                       ? 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100'
                       : 'border-slate-200 bg-white text-slate-700 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700'
                   }`}
                 >
                   {isSpeaking ? <Square size={16} /> : <Volume2 size={16} />}
-                  {isSpeaking ? 'Stop Reading' : 'Read Aloud'}
+                  <span className="hidden sm:inline">{isSpeaking ? 'Stop' : 'Read Aloud'}</span>
                 </button>
               </div>
             </div>
+
+
 
             <div className="bg-white/50 backdrop-blur-sm border border-slate-200/60 rounded-[2rem] p-6 sm:p-10 shadow-sm min-h-[400px]">
               {activeLang !== 'original' && lyricsData.length > 0 && !lyricsData.some((line) => line.translations[activeLang]) ? (

@@ -14,7 +14,10 @@ export const API_ENDPOINTS = {
     SONG_FINAL_PUBLISH: (songId) => `/song/${songId}/final_publish/`,
     LANGUAGES: '/languages/',
     GENRES: '/genre/',
+    ANNOTATION_REQUESTS: '/annotation-requests/',
+    ANNOTATION_REQUEST_REVIEW: (id) => `/annotation-requests/${id}/review/`,
 };
+
 
 export const ROLES = {
     USER: 'user',

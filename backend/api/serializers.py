@@ -1,23 +1,28 @@
 from rest_framework import serializers
-from .models import User, Song, Languages, Genre, LabelSong
+from .models import User, Song, Languages, Genre, LabelSong, AnnotationRequest
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name', 'last_name', 'rating', 'preferred_language', 'email', 'bio', 'role']
 
+
 class LanguagesSerializer(serializers.ModelSerializer):
     display_name = serializers.CharField(source='get_name_display')
 
     class Meta:
         model = Languages
-        fields = ['name','display_name']
+        fields = ['name', 'display_name']
+
 
 class GenreSerializer(serializers.ModelSerializer):
     display_name = serializers.CharField(source='get_name_display')
+
     class Meta:
         model = Genre
-        fields = ['display_name','name']
+        fields = ['display_name', 'name']
+
 
 class SongSerializer(serializers.ModelSerializer):
     author_username = serializers.ReadOnlyField(source='author.username')
@@ -46,9 +51,8 @@ class SongSerializer(serializers.ModelSerializer):
             'is_editable',
             'owner_type',
             'author',
-            'author_username'
+            'author_username',
         ]
-        # These fields cannot be modified directly via standard POST/PUT requests
         read_only_fields = ['author', 'created_at', 'status']
 
     def get_can_annotate(self, obj):
@@ -78,8 +82,6 @@ class LabelSongSerializer(serializers.ModelSerializer):
             'genre_display',
             'original_language',
             'original_language_display',
-            # 'official_lyrics',
-            # 'created_at',
             'label_account',
             'label_account_username',
         ]
@@ -91,4 +93,30 @@ class LabelSongDetailSerializer(LabelSongSerializer):
         fields = LabelSongSerializer.Meta.fields + [
             'official_lyrics',
             'created_at',
+        ]
+
+
+class AnnotationRequestSerializer(serializers.ModelSerializer):
+    contributor_username = serializers.ReadOnlyField(source='contributor.username')
+    song_title = serializers.ReadOnlyField(source='song.title')
+    song_author = serializers.ReadOnlyField(source='song.author.id')
+
+    class Meta:
+        model = AnnotationRequest
+        fields = [
+            'id',
+            'song',
+            'song_title',
+            'song_author',
+            'contributor',
+            'contributor_username',
+            'proposed_lyrics',
+            'note',
+            'status',
+            'created_at',
+            'reviewed_at',
+        ]
+        read_only_fields = [
+            'contributor', 'status', 'created_at', 'reviewed_at',
+            'song_title', 'song_author',
         ]
