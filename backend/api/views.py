@@ -352,3 +352,50 @@ class AnnotationRequestViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(annotation_request)
         return Response(serializer.data)
 
+    @action(detail=True, methods=['post'], url_path='partial_review')
+    def partial_review(self, request, pk=None):
+        """
+        Author selects individual diff hunks client-side and sends the
+        already-merged lyrics text. Backend applies those merged lyrics
+        to the song and marks the request as accepted / partially_accepted.
+        """
+        annotation_request = self.get_object()
+
+        if annotation_request.song.author != request.user:
+            return Response(
+                {'error': 'Only the song author can review annotation requests.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if annotation_request.status != 'pending':
+            return Response(
+                {'error': 'This annotation request has already been reviewed.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        applied_lyrics = request.data.get('applied_lyrics', '').strip()
+        new_status = request.data.get('status', 'partially_accepted')
+
+        if not applied_lyrics:
+            return Response(
+                {'error': 'applied_lyrics is required.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if new_status not in ('accepted', 'partially_accepted', 'rejected'):
+            return Response(
+                {'error': "status must be 'accepted', 'partially_accepted', or 'rejected'."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        annotation_request.status = new_status
+        annotation_request.reviewed_at = timezone.now()
+        annotation_request.save()
+
+        # Apply the author-curated merged lyrics to the song
+        song = annotation_request.song
+        song.original_lyrics = applied_lyrics
+        song.save(update_fields=['original_lyrics'])
+
+        serializer = self.get_serializer(annotation_request)
+        return Response(serializer.data)

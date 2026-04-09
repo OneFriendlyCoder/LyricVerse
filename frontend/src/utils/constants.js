@@ -16,6 +16,7 @@ export const API_ENDPOINTS = {
     GENRES: '/genre/',
     ANNOTATION_REQUESTS: '/annotation-requests/',
     ANNOTATION_REQUEST_REVIEW: (id) => `/annotation-requests/${id}/review/`,
+    ANNOTATION_REQUEST_PARTIAL_REVIEW: (id) => `/annotation-requests/${id}/partial_review/`,
 };
 
 
